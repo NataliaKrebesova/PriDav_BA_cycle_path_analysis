@@ -32,6 +32,10 @@ Cieľom projektu je analyzovať správanie cyklistov v Bratislave na základe d�
 - H₀: Všetky cyklotrasy majú podobný časový profil využitia.  
 - H₁: Cyklotrasy je možné rozdeliť do skupín s odlišným časovým profilom využitia.
 
+**7. Existujú významné rozdiely v správaní cyklistov pred otvorením a po otvorení cyklocesty na Vajanského nábreží, ktoré sa uskutočnilo 6.9.2023?**
+- H₀: Neexistujú významné rozdiely v správaní cyklistov pred otvorením a po otvorení cyklocesty na Vajanského nábreží.  
+- H₁: Existujú významné rozdiely v správaní cyklistov pred otvorením a po otvorení cyklocesty na Vajanského nábreží.
+
 ## 2. Použité technológie
 
 ### Programovacie jazyky a knižnice

@@ -53,12 +53,6 @@ Cieľom projektu je analyzovať správanie cyklistov v Bratislave na základe d�
 3. Vizualizácia dát:
    - ?
 
-### Development Tools
-
-- **GitHub**
-- **Jupyter Notebook**
-- **Visual Studio Code** (alebo iné IDE)
-
 ## 3. Získanie a spracovanie dát
 
 ### Dátové zdroje
@@ -133,17 +127,23 @@ Cieľom čistenia a predspracovania dát bolo zjednotiť časový rozsah oboch d
 
 Prvým krokom bolo zmenšenie cyklo datasetu na časové rozhranie datasetu s počasím. Dáta z cyklosčítačov obsahovali časový údaj vo formáte UTC na hodinovej báze. Meteorologické dáta obsahovali denné záznamy s dátumom bez časovej zložky. Do dát o cyklosčítačoch bol teda pridaný stĺpec **`datetime`**, ktorý je nastavený na bratislavskú časovú zónu a bude sa napájať na dáta o počasí v správny deň. Po vyfiltrovaní údajov s nechcenými dátumami sa už mohla kontrolovať samotná kvalita dát.
 
-Pri kontrole kvality cyklo dát sa ukázalo, že dáta sú plne vyplnené a neobsahujú žiadne „podozrivé“ hodnoty, ktoré by sa mohli rovnať prázdnej alebo nulovej hodnote. Odchýlky v rámci jednotlivých stĺpcov boli adekvátne ich obsahu.
+Ako prvé sme sa pozreli na samotné názvy cyklotrias a ich smery, počas čoho sme zistili, že niektoré stĺpce obsahujú navyše charakter '\n'. Všetky textové stĺpce boli kvôli tomu zo strán očistené pomocou funkcie `strip()`.
 
-Pri kontrole dát o počasí sa ukázalo, že dáta neobsahujú žiadne údaje o hĺbke snehu ani o smere vetra. Stĺpcu **`tsun`** chýbala približne tretina záznamov a stĺpcu **`prcp`** jeden záznam. Štandardná odchýlka nenaznačovala prítomnosť žiadnych vyplnených „chýbajúcich“ hodnôt na štýl -1.
+Pri kontrole kvality cyklo dát sa ukázalo, že pre každý snímač chýbajú časové záznamy. Tieto medzery mali rôzne dĺžky, niektoré len jednu hodinu, niektoré takmer celý deň. Tento problém bol vyriešený neskôr v časri 'Predspracovanie'. Zvyšné dáta boli plne vyplnené a neobsahovali žiadne 'podozrivé' hodnoty, ktoré by sa mohli rovnať prázdnej alebo nulovej hodnote. Odchýlky v rámci jednotlivých stĺpcov boli adekvátne ich obsahu.
 
-Celkovo boli oba zdroje dát vyhodnotené ako použiteľné a malé nedostatky v meteorologických dátach boli adresované počas predspracovania.
+Pri kontrole dát o počasí sa ukázalo, že dáta neobsahujú žiadne údaje o hĺbke snehu ani o smere vetra. Stĺpcu **`tsun`** chýbala približne tretina záznamov a stĺpcu **`prcp`** jeden záznam. Štandardná odchýlka nenaznačovala prítomnosť žiadnych vyplnených 'chýbajúcich' hodnôt na štýl `-1`.
+
+Celkovo boli oba zdroje dát vyhodnotené ako použiteľné a nedostatky boli adresované počas predspracovania.
 
 #### Predspracovanie
 
-V cyklo dátach boli odstránené stĺpce **`ObjectId`** a **`DATUM_A_CAS`**, keďže jeden nebol potrebný pre ďalšie kroky a druhý bol nahradený stĺpcom **`datetime`**. Ďalej boli vytvorené stĺpce, ktoré by mohli byť užitočné pre zodpovedanie výskumných otázok:
+V cyklo dátach boli podstatné stĺpce premenované na lepšie čitateľné a použiteľné názvy. Následne boli odstránené stĺpce **`attributes.ObjectId`** a **`attributes.DATUM_A_CAS`**, keďže jeden nebol potrebný pre ďalšie kroky a druhý bol nahradený stĺpcom **`datetime`**.
+
+Problém chýbajúcich časových úsekov bol vyriešený tak, že sa pre každý snímač doplnili všetky hodinové záznamy od jeho prvého sčítania po posledné. Do týchto záznamov sa zapísali hodnoty pre statické stĺpce (napr. názov, smery a počasie). Ak bol chýbajúci úsek dlhý iba 1-2 hodiny, tak boli počty cyklistov doplnené pomocou interpolácie - vypočítajú sa na základe okolitých hodnôt. Takto vypočítané hodnoty dostali hodnotu `True` v stĺpci **`was_imputed`**. Ak bola medzera väčšia, tak zostali počty prázdne. Týmto sme zabezpečili kontinuitu dát pre vizualizáciu, ale neprehnali sme to s 'hádaním' chýbajúcich dát.
+
+Ďalej boli vytvorené stĺpce, ktoré by mohli byť užitočné pre zodpovedanie výskumných otázok:
 - **`pocet_total`** – súčet stĺpcov **`pocet_do`** a **`pocet_z`**
-- **`date`** – dátumová časť zo stĺpca **`datetime`**
+- **`date`** – čisto dátumová časť zo stĺpca **`datetime`**
 - **`weekday`** – číselné hodnoty zodpovedajúce dňu v týždni (0 – pondelok, …, 6 – nedeľa)
 - **`is_weekend`** – 1, ak je daný deň sobota alebo nedeľa, inak 0
 - **`month`** – číselná hodnota mesiaca
@@ -152,7 +152,7 @@ V cyklo dátach boli odstránené stĺpce **`ObjectId`** a **`DATUM_A_CAS`**, ke
 
 V dátach o počasí boli odstránené prázdne stĺpce **`snow`** a **`wdir`**. Pre chýbajúcu hodnotu v stĺpci **`prcp`** bolo rozhodnuté, že keďže sa jedná iba o jeden záznam, bude nahradená hodnotou 0.
 
-Cyklistické a meteorologické dáta boli spojené na základe dátumu pomocou ľavého spojenia (left join), čím sa zachovali všetky cyklistické záznamy a k nim boli priradené príslušné meteorologické údaje. Po spojení sa overilo vyplnenie všetkých údajov.
+Cyklistické a meteorologické dáta boli spojené na základe dátumu pomocou ľavého spojenia (left join), čím sa zachovali všetky cyklistické záznamy a k nim boli priradené príslušné meteorologické údaje. Po spojení sa overilo vyplnenie všetkých údajov, kde sa potvrdilo, že chýbajú iba údaje v stĺpcoch, kde to bolo vopred akceptované a očakávané.
 
 #### Skladovanie dát
 

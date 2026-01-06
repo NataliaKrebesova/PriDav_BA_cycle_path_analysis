@@ -8,7 +8,7 @@ Cieľom projektu je analyzovať správanie cyklistov v Bratislave na základe d�
 
 ### Výskumné otázky a hypotézy
 
-**1. Líši sa vyťaženosť jednotlivých cyklotrás v Bratislave?**  
+**1. Líši sa denná vyťaženosť jednotlivých cyklotrás v Bratislave?**  
 - H₀: Medzi jednotlivými cyklotrasami neexistujú významné rozdiely v priemernej dennej vyťaženosti.  
 - H₁: Medzi jednotlivými cyklotrasami existujú významné rozdiely v priemernej dennej vyťaženosti.
 
@@ -162,9 +162,10 @@ Výsledný predspracovaný dataset bol uložený do súboru **`final_data.csv`**
 
 ## 5. Záver
 
-**1. Líši sa vyťaženosť jednotlivých cyklotrás v Bratislave?**
+**1. Líši sa denná vyťaženosť jednotlivých cyklotrás v Bratislave?**
 
-Relevantný kód je v súboroch `denne_cyklo.ipynb` a `hypothesis1.ipynb`.
+Relevantný kód je v súboroch `denne_cyklo.ipynb` a `hypothesis1.ipynb`. Pred vykonaním testu sme dáta pre každú cyklotrasu najprv upravili na spoločný dátum, odstránili neúplné záznamy, zlúčili niektoré trasy, atď., detaily sú v súbore `denne_cyklo.ipynb`.
+
 Hypotézy:
 
 H₀: Medzi jednotlivými cyklotrasami neexistujú významné rozdiely v priemernej dennej vyťaženosti. (Očakávaný počet cyklistov za deň je rovnaký pre všetky cyklotrasy, parameter trasa nemá významný vplyv na strednú hodnotu.)

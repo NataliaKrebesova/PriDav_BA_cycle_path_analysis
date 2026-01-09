@@ -1,6 +1,6 @@
 # Bratislavské cyklotrasy
 
-Analýza správania cyklystov v Bratislave vrámci projektu pre 1-DAV-302/20 - Princípy dátovej vedy.
+Analýza správania cyklistov v Bratislave v rámci projektu pre 1-DAV-302/20 - Princípy dátovej vedy, skupina VND - (v)e need degrees.
 
 ## 1. Výskumné otázky a cieľ projektu
 
@@ -47,11 +47,13 @@ Cieľom projektu je analyzovať správanie cyklistov v Bratislave na základe d�
 #### Knižnice
 
 1. Získanie a spracovanie dát:
-   - **requests**, **pandas**
+   - **requests**, **pandas**, **numpy**, **geopy**
 2. Analýza dát:
-   - **sklearn**, **scipy.stats**
+   - **sklearn**, **scipy.stats**, **statsmodels**
 3. Vizualizácia dát:
-   - **matplotlib**, **seaborn**, 
+   - **matplotlib**, **seaborn**, **folium**
+4. Pomocné:
+   - **random**, **math**
 
 ## 3. Získanie a spracovanie dát
 
@@ -127,9 +129,9 @@ Cieľom čistenia a predspracovania dát bolo zjednotiť časový rozsah oboch d
 
 Prvým krokom bolo zmenšenie cyklo datasetu na časové rozhranie datasetu s počasím. Dáta z cyklosčítačov obsahovali časový údaj vo formáte UTC na hodinovej báze. Meteorologické dáta obsahovali denné záznamy s dátumom bez časovej zložky. Do dát o cyklosčítačoch bol teda pridaný stĺpec **`datetime`**, ktorý je nastavený na bratislavskú časovú zónu a bude sa napájať na dáta o počasí v správny deň. Po vyfiltrovaní údajov s nechcenými dátumami sa už mohla kontrolovať samotná kvalita dát.
 
-Ako prvé sme sa pozreli na samotné názvy cyklotrias a ich smery, počas čoho sme zistili, že niektoré stĺpce obsahujú navyše charakter '\n'. Všetky textové stĺpce boli kvôli tomu zo strán očistené pomocou funkcie `strip()`.
+Ako prvé sme sa pozreli na samotné názvy cyklotrás a ich smery, počas čoho sme zistili, že niektoré stĺpce obsahujú navyše charakter '\n'. Všetky textové stĺpce boli kvôli tomu zo strán očistené pomocou funkcie `strip()`.
 
-Pri kontrole kvality cyklo dát sa ukázalo, že pre každý snímač chýbajú časové záznamy. Tieto medzery mali rôzne dĺžky, niektoré len jednu hodinu, niektoré takmer celý deň. Tento problém bol vyriešený neskôr v časri 'Predspracovanie'. Zvyšné dáta boli plne vyplnené a neobsahovali žiadne 'podozrivé' hodnoty, ktoré by sa mohli rovnať prázdnej alebo nulovej hodnote. Odchýlky v rámci jednotlivých stĺpcov boli adekvátne ich obsahu.
+Pri kontrole kvality cyklo dát sa ukázalo, že pre každý snímač chýbajú časové záznamy. Tieto medzery mali rôzne dĺžky, niektoré len jednu hodinu, niektoré takmer celý deň. Tento problém bol vyriešený neskôr v časti 'Predspracovanie'. Zvyšné dáta boli plne vyplnené a neobsahovali žiadne 'podozrivé' hodnoty, ktoré by sa mohli rovnať prázdnej alebo nulovej hodnote. Odchýlky v rámci jednotlivých stĺpcov boli adekvátne ich obsahu.
 
 Pri kontrole dát o počasí sa ukázalo, že dáta neobsahujú žiadne údaje o hĺbke snehu ani o smere vetra. Stĺpcu **`tsun`** chýbala približne tretina záznamov a stĺpcu **`prcp`** jeden záznam. Štandardná odchýlka nenaznačovala prítomnosť žiadnych vyplnených 'chýbajúcich' hodnôt na štýl `-1`.
 
@@ -162,7 +164,7 @@ Výsledný predspracovaný dataset bol uložený do súboru **`final_data.csv`**
 
 ### Analýza dennej vyťaženosti
 
-Relevantný kód k analýze sa nachádza v súboroch `denne_cyklo.ipynb` a `hypothesis1.ipynb`. Pred samotným testovaním boli dáta pre jednotlivé cyklotrasy upravené na spoločné časové obdobie, odstránili sa neúplné záznamy a v niektorých prípadoch boli trasy zlúčené, detaily sú  v súbore denne_cyklo.ipynb.
+Relevantný kód k analýze sa nachádza v súboroch `denne_cyklo.ipynb` a `hypothesis1.ipynb`. Pred samotným testovaním boli dáta pre jednotlivé cyklotrasy upravené na spoločné časové obdobie, odstránili sa neúplné záznamy a v niektorých prípadoch boli trasy zlúčené, detaily sú v súbore `denne_cyklo.ipynb`.
 
 Otázka: Líši sa denná vyťaženosť jednotlivých cyklotrás v Bratislave?
 
@@ -344,7 +346,7 @@ Scatter plot s regresnou čiarou bol použitý na vizualizáciu trendu. Regresn�
 
 - Zrážky majú preukázateľne negatívny vplyv na cyklistickú dopravu.
   Víkendy nevykazujú štatisticky významný rozdiel oproti pracovným dňom v jednoduchom porovnaní, avšak regresný model naznačuje mierny pozitívny efekt.
-- Teplota a slnečný svit patria mezdi najsilnejšie pozitívne faktory.
+- Teplota a slnečný svit patria medzi najsilnejšie pozitívne faktory.
 
 ---
 
@@ -503,7 +505,7 @@ Starý Most, Dunajská, Most Apollo, Vajanského 1, Vajanského 2, Incheba Einst
 **Cluster 2 (len popoludňajší peak)** – „hlavne rekreačné / popoludňajšie trasy“:
 Železná studnička, Dolnozemská, Devínska cesta, Most SNP, Cyklomost Slobody, Devinska Nova Ves, Hradza Berg
 
-Poznámka: Most SNP je cyklotrasa používaná celý deň vo vysokej frekvencii a po overení na dátach sme videli že ajkeď je používaná aj na dojazdy do a z práce, je frekventovaná celý deň, preto bola zaradená do Clustru 2.
+Poznámka: Most SNP je cyklotrasa používaná celý deň vo vysokej frekvencii a po overení na dátach sme videli že aj keď je používaná aj na dojazdy do a z práce, je frekventovaná celý deň, preto bola zaradená do Clustru 2.
 
 ### Kvantitatívna analýza
 
@@ -582,7 +584,7 @@ Negatívna binomická regresia umožnila korektne zachytiť nadmernú disperziu 
 
 **6. Je možné na základe časových vzorov využiť dáta na rozlíšenie rôznych typov cyklotrás?**
 
-Analýza 24‑hodinových normalizovaných profilov cyklotrás pomocou klastrovania odhalila dve jasne odlíšiteľné skupiny: trasy s ranným a poobedným peakom („do práce a z práce“) a trasy s dominantným poobedným peakom („rekreačné/popoldňajšie trasy“). Tieto vzorce boli vizuálne potvrdené priemernými profilmi pre každý cluster a 2D PCA projekciou, ktorá ukázala separáciu trás podľa časových charakteristík.
+Analýza 24‑hodinových normalizovaných profilov cyklotrás pomocou klastrovania odhalila dve jasne odlíšiteľné skupiny: trasy s ranným a popoludňajším peakom („do práce a z práce“) a trasy s dominantným popoludňajším peakom („rekreačné/popoludňajšie trasy“). Tieto vzorce boli vizuálne potvrdené priemernými profilmi pre každý cluster a 2D PCA projekciou, ktorá ukázala separáciu trás podľa časových charakteristík.
 
 Na základe týchto zistení môžeme zamietnuť nulovú hypotézu H₀ a konštatovať, že časové profily cyklotrás umožňujú rozlíšiť trasy podľa typu ich využitia, čo podporuje predpoklad existencie odlišných skupín trás podľa denného rytmu dopravy.
 

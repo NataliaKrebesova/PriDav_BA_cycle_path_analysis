@@ -33,8 +33,8 @@ Cieľom projektu je analyzovať správanie cyklistov v Bratislave na základe d�
 - H₁: Cyklotrasy je možné rozdeliť do skupín s odlišným časovým profilom využitia.
 
 **7. Existujú významné rozdiely v správaní cyklistov pred otvorením a po otvorení cyklocesty na Vajanského nábreží, ktoré sa uskutočnilo 6.9.2023?**
-- H₀: Neexistujú významné rozdiely v správaní cyklistov pred otvorením a po otvorení cyklocesty na Vajanského nábreží.  
-- H₁: Existujú významné rozdiely v správaní cyklistov pred otvorením a po otvorení cyklocesty na Vajanského nábreží.
+- H₀: Denné počty cyklistov na vybraných trasách v období september-október v rokoch 2022 a 2023 sa nelíšia.
+- H₁: Denné počty cyklistov na vybraných trasách v období september-október v rokoch 2022 a 2023 sa líšia.
 
 ## 2. Použité technológie
 
@@ -423,6 +423,32 @@ Výsledky vizualizačnej aj štatistickej analýzy jednoznačne potvrdzujú exis
 --- 
 
 
+### Zmenilo pridanie cyklocesty na Vajanského nábreží trendy v správaní cyklistov?
+
+H₀: Denné počty cyklistov na vybraných trasách v období september-október v rokoch 2022 a 2023 sa nelíšia.
+
+H₁: Denné počty cyklistov na vybraných trasách v období september-október v rokoch 2022 a 2023 sa líšia.
+
+Cieľom analýzy bolo posúdiť, či sa po vybudovaní cyklocesty na Vajanského nábreží (6. 9. 2023) zmenili denné počty cyklistov na vybraných cyklotrasách v Bratislave. Porovnávané boli obdobia september-október v rokoch 2022 a 2023, čím sa minimalizoval vplyv sezónnosti. Analyzované údaje predstavujú denné počty cyklistov, ktoré majú charakter diskrétnych, asymetricky rozdelených dát s možnou nadmernou variabilitou.
+
+Na porovnanie denných počtov cyklistov medzi rokmi bol použitý Mann-Whitney U test, ktorý nevyžaduje predpoklad normálneho rozdelenia a je vhodný pri porovnávaní dvoch nezávislých vzoriek. Test bol aplikovaný jednak na agregované údaje zo všetkých trás, jednak samostatne pre jednotlivé trasy, s cieľom identifikovať heterogénne reakcie na zmenu infraštruktúry.
+
+Agregovaný test naprieč všetkými trasami preukázal štatisticky významný nárast denných počtov cyklistov medzi rokmi 2022 a 2023 (priemer 638 vs. 775 cyklistov denne, +21.4 %, p = 0.041). To naznačuje, že v sledovanom období došlo k celkovému zvýšeniu intenzity cyklistickej dopravy. Pri analýze jednotlivých trás sa významné rozdiely objavili na 5 zo 7 trás, pričom väčšina zaznamenala výrazný nárast, zatiaľ čo trasa Starý most vykázala pokles.
+
+Zaujímavým zistením je, že nárasty neboli obmedzené len na trasy v bezprostrednej blízkosti Vajanského nábrežia, ale boli pozorované aj na vzdialenejších trasách. To naznačuje, že pozorované zmeny môžu odrážať všeobecný medziročný rast cyklistickej dopravy, prípadne kombináciu viacerých faktorov (počasie, rozvoj siete, zmena dopravného správania), a nie výlučne lokálny efekt novej cyklocesty.
+
+Výsledky preto poskytujú indície o zmene správania cyklistov, avšak samy o sebe neumožňujú jednoznačne pripísať túto zmenu výstavbe cyklocesty na Vajanského nábreží. Na presvedčivejšie kauzálne vyhodnotenie by bolo potrebné použiť metódy, ktoré explicitne oddeľujú lokálny zásah od globálneho trendu, napríklad viacrozmernú regresiu s kontrolou meteorologických a časových faktorov.
+
+#### Riziko viacnásobného testovania
+
+Pri testovaní rozdielov pre každú trasu zvlášť vzniká problém viacnásobného testovania (multiple comparisons). Ak sa používa hladina významnosti alpha = 0.05, potom pri siedmich nezávislých testoch je pravdepodobnosť, že aspoň jeden výsledok vyjde falošne významný, podstatne vyššia než 5 %. V tomto prípade je riziko zvlášť relevantné, pretože:
+
+- počet trás je relatívne malý,
+
+- p-hodnoty viacerých trás sa pohybujú tesne pod hranicou 0.05.
+
+Po jednoduchej Bonferroniho korekcii (alpha / 7 ≈ 0.007) žiadny z individuálnych testov nebol štatisticky významný, čo naznačuje, že časť zistených rozdielov môže byť výsledkom náhodnej variability. Z tohto dôvodu by výsledky testov po jednotlivých trasách mali byť interpretované exploračne, nie ako definitívny dôkaz kauzality.
+
 ## 5. Záver
 
 **1. Líši sa denná vyťaženosť jednotlivých cyklotrás v Bratislave?**
@@ -452,3 +478,7 @@ Vyššie množstvo zrážok je spojené s poklesom cyklistickej dopravy, čo naz
 **5. Existuje vzťah medzi priemernou dennou teplotou a počtom cyklistov?**
 
 **6. Je možné na základe časových vzorov využiť dáta na rozlíšenie rôznych typov cyklotrás?**
+
+**7. Zmenilo pridanie cyklocesty na Vajanského nábreží trendy v správaní cyklistov?**
+
+Analýza skúmala, či sa po vybudovaní cyklocesty na Vajanského nábreží (6. 9. 2023) zmenili denné počty cyklistov na vybraných trasách v Bratislave, a to porovnaním období september-október v rokoch 2022 a 2023. Na základe Mann-Whitney U testu bol pri agregovaných údajoch zo všetkých trás pozorovaný štatisticky významný nárast priemerného denného počtu cyklistov, čo naznačuje celkové zvýšenie intenzity cyklistickej dopravy medzi sledovanými rokmi. Pri analýze jednotlivých trás sa však ukázalo, že hoci viaceré trasy vykazovali výrazné relatívne zmeny, výsledky sú citlivé na problém viacnásobného testovania a po aplikácii Bonferroniho korekcie nebol žiadny z individuálnych rozdielov štatisticky významný. Zistenia preto treba interpretovať ako exploračné, pričom pozorované zmeny môžu odrážať všeobecný medziročný trend v cyklistickej doprave, a nie jednoznačný kauzálny efekt vybudovania cyklocesty na Vajanského nábreží.

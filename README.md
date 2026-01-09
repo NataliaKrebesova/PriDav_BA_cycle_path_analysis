@@ -217,24 +217,24 @@ Do modelu boli zahrnuté nasledujúce premenné:
 
 Keďže boli vstupné premenné štandardizované, regresné koeficienty vyjadrujú zmenu denného počtu cyklistov pri zmene vysvetľujúcej premennej o jednu štandardnú odchýlku. Absolútne hodnoty koeficientov sa preto môžu javiť ako vysoké, avšak zodpovedajú reálnemu rozsahu variability meteorologických premenných a umožňujú porovnanie ich relatívnej dôležitosti.
 
-**Denné zrážky**
+- **Denné zrážky**
 
 Oba modely vykazujú konzistentný záporný koeficient, čo znamená, že vyššie množstvo zrážok je spojené s nižším denným počtom cyklistov. Tento výsledok naznačuje negatívny vplyv dažďa na cyklistickú dopravu. Teda **Nulovú hypotézu H₀ (zrážky nemajú vplyv) zamietame.**
 
-**Víkend**
+- **Víkend**
 
 Premenná indikujúca víkend má kladný koeficient, čo naznačuje, že pri rovnakých meteorologických podmienkach je počas víkendov v priemere viac cyklistov než počas pracovných dní. Tento efekt však reprezentuje modelový odhad podmienený ostatnými premennými. Ide však o **podmienený efekt**, ktorý zohľadňuje súčasne vplyv počasia.
 
-**Teplota a slnečný svit**
+- **Teplota a slnečný svit**
 
 Priemerná denná teplota a dĺžka slnečného svitu patria medzi najsilnejšie pozitívne faktory, čo je v súlade s intuitívnym očakávaním aj pozorovanou sezónnosťou.
 
-**Vietor**
+- **Vietor**
 
 Maximálne nárazy vetra majú mierne negatívny vplyv, čo naznačuje, že nepriaznivé veterné podmienky môžu cyklistickú dopravu obmedzovať.
 
 
-#### Doplnkové štatistické testy
+#### Štatistické testy
 
 **Pracovné dni vs víkendy**
 
@@ -256,7 +256,8 @@ Tento rozdiel poukazuje na rozdiel medzi:
 - jednoduchým porovnaním skupín,
 - a podmieneným efektom v multivariačnom modeli.
 
-#### Vplyv zrážok na počet cyklistov
+ 
+**Vplyv zrážok na počet cyklistov**
 
 Na analýzu vplyvu zrážok na denný počet cyklistov boli použité korelačné testy Pearson a Spearman, ktoré poskytujú komplementárne pohľady na lineárny a monotónny vzťah.
 
@@ -274,6 +275,8 @@ Použitie oboch testov umožňuje overiť stabilitu a konzistentnosť zisteného
 Oba testy potvrdzujú štatisticky významný negatívny vzťah medzi množstvom denných zrážok a počtom cyklistov.
 
 **Nulovú hypotézu H₀ zamietame.**
+
+![Vplyv zrážok na počet cyklistov](Images/scatter_plot_reg.png)
 
 Scatter plot s regresnou čiarou bol použitý na vizualizáciu trendu. Regresná čiara je interpretovaná len v rámci rozsahu pozorovaných dát, keďže lineárny model môže pri extrapolácii nadobúdať záporné hodnoty, ktoré nie sú zmysluplné.
 
@@ -307,6 +310,8 @@ Na detailnejšie preskúmanie sezónnosti bola vykonaná agregácia dát na mesa
 
 Táto vizualizácia umožňuje zachytiť plynulý sezónny cyklus, ktorý by pri agregácii len na úroveň ročných období mohol zostať čiastočne skrytý.
 
+![Priemerný počet prejazdov podľa mesiaca](Images/mothly_mean.png)
+
 #### Sezónne indexy 
 Na kvantifikáciu rozdielov medzi jednotlivými ročnými obdobiami boli vypočítané sezónne indexy, ktoré vyjadrujú relatívnu intenzitu cyklistickej dopravy vzhľadom na celoročný priemer (index = 1).
 
@@ -337,13 +342,14 @@ Táto vizualizácia odhaľuje:
 
 Heatmapa poskytuje viacrozmerný pohľad na správanie cyklistov.
 
+![Sezónne a týždenné vzory cyklistickej dopravy](Images/heatmap_seasons.png)
 
 #### Štatistické testovanie sezónnosti
 Keďže rozdelenie denného počtu cyklistov nevykazuje normalitu a obsahuje extrémne hodnoty, bol na štatistické overenie sezónnych rozdielov použitý **Kruskal–Wallis test**. Tento neparametrický test porovnáva mediány viacerých nezávislých skupín bez predpokladu normálneho rozdelenia dát.
 
 **Výsledok Kruskal–Wallis testu:**
 
-*p-value < 0.001*
+- *p-value < 0.001*
 
 Na základe tohto výsledku je možné **zamietnuť nulovú hypotézu H₀** a konštatovať, že vyťaženosť cyklotrás sa medzi ročnými obdobiami štatisticky významne líši.
 
@@ -352,7 +358,7 @@ Na základe tohto výsledku je možné **zamietnuť nulovú hypotézu H₀** a k
 
 Výsledky vizualizačnej aj štatistickej analýzy jednoznačne potvrdzujú existenciu výrazného sezónneho správania cyklistickej dopravy v Bratislave. Najvyššia intenzita cyklistickej dopravy sa vyskytuje počas letných mesiacov, zatiaľ čo zimné obdobie je charakteristické výrazným útlmom.
 
-**Alternatívna hypotéza H₁ bola potvrdená.**
+**Alternatívna hypotéza H₁ bola prijatá.**
 
 --- 
 
@@ -427,16 +433,19 @@ Výsledky štatistického testu sú pozorovateľné aj graficky, na grafe vidím
 ![Daily average cyclist count by route](Images/daily_avg_count.png)
 
 **2. Existujú rozdiely v správaní cyklistov medzi pracovnými dňami a víkendmi?**
+
 Analýza rozdielov medzi pracovnými dňami a víkendmi priniesla zmiešané výsledky v závislosti od použitej metodiky. Neparametrický Mann–Whitney U test nepreukázal štatisticky významný rozdiel v dennom počte cyklistov medzi týmito dvoma skupinami dní. To naznačuje, že z pohľadu celkového, nepodmieneného porovnania nie je možné tvrdiť, že by sa intenzita cyklistickej dopravy počas víkendov systematicky líšila od pracovných dní.
 
 Na druhej strane, viacrozmerný regresný model po zohľadnení meteorologických faktorov identifikoval mierny pozitívny efekt víkendov. Tento rozdiel poukazuje na skutočnosť, že správanie cyklistov počas víkendov je ovplyvňované najmä externými faktormi, ako sú počasie a ročné obdobie, a samotný typ dňa (pracovný deň vs. víkend) nemá dominantný vplyv na celkovú intenzitu cyklistickej dopravy.
 
 **3. Vykazuje cyklistická doprava v Bratislave sezónne správanie?**
+
 Výsledky vizualizačnej aj štatistickej analýzy jednoznačne potvrdzujú existenciu výrazného sezónneho správania cyklistickej dopravy v Bratislave. Mesačné priemery, sezónne indexy aj heatmapy poukazujú na systematické zmeny v intenzite cyklistickej dopravy v priebehu roka.
 
 Štatistické testovanie pomocou Kruskal–Wallis testu preukázalo významné rozdiely medzi jednotlivými ročnými obdobiami, čo umožňuje zamietnuť nulovú hypotézu o rovnomernej vyťaženosti cyklotrás počas roka. Najvyššia intenzita cyklistickej dopravy sa vyskytuje v letných mesiacoch, zatiaľ čo zimné obdobie je charakteristické výrazným útlmom. Sezónnosť tak predstavuje jeden z kľúčových determinantov cyklistickej dopravy v meste.
 
 **4. Ovplyvňujú zrážky počet cyklistov v Bratislave?**
+
 Analýza preukázala jednoznačný negatívny vzťah medzi množstvom denných zrážok a počtom cyklistov v Bratislave. Tento vzťah bol potvrdený viacerými nezávislými prístupmi – korelačnými testami aj regresnou analýzou – čo zvyšuje dôveryhodnosť výsledkov.
 
 Vyššie množstvo zrážok je spojené s poklesom cyklistickej dopravy, čo naznačuje, že daždivé počasie predstavuje významnú bariéru pre využívanie bicykla ako dopravného prostriedku. Na základe týchto zistení je možné konštatovať, že zrážky patria medzi najvýznamnejšie krátkodobé faktory ovplyvňujúce rozhodovanie cyklistov.

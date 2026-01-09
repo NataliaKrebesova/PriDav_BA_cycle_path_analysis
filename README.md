@@ -160,6 +160,66 @@ Výsledný predspracovaný dataset bol uložený do súboru **`final_data.csv`**
 
 ## 4. Analýza a výsledky
 
+### Analýza dennej vyťaženosti
+
+Relevantný kód k analýze sa nachádza v súboroch `denne_cyklo.ipynb` a `hypothesis1.ipynb`. Pred samotným testovaním boli dáta pre jednotlivé cyklotrasy upravené na spoločné časové obdobie, odstránili sa neúplné záznamy a v niektorých prípadoch boli trasy zlúčené, detaily sú  v súbore denne_cyklo.ipynb.
+
+Otázka: Líši sa denná vyťaženosť jednotlivých cyklotrás v Bratislave?
+
+Hypotézy:
+
+H₀: Medzi jednotlivými cyklotrasami neexistujú významné rozdiely v priemernej dennej vyťaženosti. (Očakávaný počet cyklistov za deň je rovnaký pre všetky cyklotrasy, parameter trasa nemá významný vplyv na strednú hodnotu.)
+
+H₁: Medzi jednotlivými cyklotrasami existujú významné rozdiely v priemernej dennej vyťaženosti. (Očakávaný počet cyklistov za deň sa líši medzi aspoň dvoma cyklotrasami.)
+
+#### Voľba štatistického modelu pre analýzu dennej vyťaženosti cyklotrás
+
+Predmetom analýzy sú denné počty cyklistov (`daily_total`) na jednotlivých cyklotrasách. Ide o nezáporné celočíselné údaje, ktoré reprezentujú zaznamenaný počet prejazdov bicyklov za deň. Tento typ dát nie je vhodný pre klasické metódy, ako je ANOVA alebo lineárna regresia, ktoré predpokladajú spojitú a približne normálne rozloženú závislú premennú s konštantným rozptylom.
+
+Pri počtových dátach sú tieto predpoklady typicky porušené (https://www.datacamp.com/tutorial/poisson-regression):
+
+- rozdelenie býva pravostranne šikmé,
+
+- rozptyl rastie spolu s priemerom,
+
+- rozptyl môže výrazne prevyšovať priemer (tzv. overdispersion/overdisperzia https://en.wikipedia.org/wiki/Overdispersion),
+
+- hodnoty sú diskrétne, nie spojité.
+
+Použitie nevhodného modelu by viedlo k skresleným odhadom, nesprávnym štandardným chybám a falošne nízkym p-hodnotám (zvýšené riziko chyby I. typu).
+
+Z tohto dôvodu sme zvolili generalizované lineárne modely (GLM) určené pre počtové dáta. Základným modelom je Poissonova regresia, ktorá predpokladá, že rozptyl závislej premennej sa rovná jej priemeru a zabezpečuje nezáporné predikcie očakávaných počtov.
+
+#### Diagnostika overdisperzie a voľba finálneho modelu
+
+Poissonov model sme najprv použili ako diagnostický nástroj. Overdisperziu sme hodnotili pomocou pomeru Pearsonovej chí-kvadrát štatistiky a reziduálnych stupňov voľnosti. (https://www.askpython.com/python-modules/statsmodel/statsmodels-generalized-linear-models) Tento pomer bol výrazne väčší ako 1 (konkrétne 280.99), čo signalizovalo extrémnu overdisperziu.
+
+Podobný záver vyplynul aj z porovnania rozptylu a priemeru denných počtov cyklistov na jednotlivých trasách. Vo všetkých prípadoch rozptyl výrazne prekračoval priemer (pomer > 50). To znamená, že Poissonov model by podhodnocoval skutočnú variabilitu dát a produkoval by neprimerane malé štandardné chyby.
+
+Z tohto dôvodu sme použili negatívnu binomickú regresiu, ktorá rozširuje Poissonov model o dodatočný parameter rozptylu. Tento model umožňuje, aby rozptyl rástol nezávisle od priemeru, a je preto vhodný pre dáta s nadmernou variabilitou. Po jeho aplikácii klesla odhadnutá disperzia na 0.57, čo naznačuje, že model adekvátne zachytáva variabilitu v dátach a je vhodný pre ďalšiu inferenciu. (https://link.springer.com/article/10.1186/s12966-023-01460-y, https://stats.oarc.ucla.edu/stata/dae/negative-binomial-regression/)
+
+#### Interpretácia koeficientov modelu
+
+Koeficienty Poissonovho aj negatívneho binomického modelu majú rovnakú interpretáciu. Vyjadrujú rozdiel v logaritme očakávaného denného počtu cyklistov medzi danou trasou a referenčnou trasou. Po exponenciácii koeficientu získame multiplikatívny efekt, teda pomer očakávaných denných počtov medzi trasami. (https://www.datacamp.com/tutorial/poisson-regression)
+
+Referenčná trasa mala v našej analýze približný priemerný denný počet 635 cyklistov.
+Napríklad koeficient 0.97 znamená, že očakávaný denný počet na danej trase je exp(0.97) ≈ 2.64-krát vyšší než na referenčnej trase, čo zodpovedá približne 1676 cyklistom denne. Záporný koeficient naopak indikuje nižšiu vyťaženosť v porovnaní s referenčnou trasou.
+
+Bodové odhady koeficientov boli v oboch modeloch veľmi podobné, čo je očakávané, keďže oba modely odhadujú rovnakú strednú hodnotu. Rozdiel medzi nimi spočíva najmä v štandardných chybách. Poissonov model, ktorý ignoruje overdisperziu, produkuje neprimerane nízke štandardné chyby a vedie k nadhodnoteniu štatistickej významnosti. Negatívny binomický model poskytuje realistickejšie štandardné chyby, a teda aj spoľahlivejšie p-hodnoty a intervaly spoľahlivosti. (https://www.reddit.com/r/statistics/comments/ttgrxl/q_why_does_overdispersion_make_coefficient/)
+
+#### Porovnanie s nulovým modelom
+
+Na formálne otestovanie rozdielov medzi trasami sme použili Likelihood Ratio Test (LRT). Porovnávali sme negatívny binomický model obsahujúci premennú trasa (daily_total ~ nazov) s nulovým modelom (daily_total ~ 1), ktorý predpokladá rovnakú priemernú dennú vyťaženosť pre všetky trasy.
+
+Testovacia štatistika bola vypočítaná ako
+LR = 2 * (log-likelihood negatívneho binomického modelu - log-likelihood nulového modelu). Log-likelihood je mierou toho, ako dobre konkrétny model vysvetľuje pozorované dáta, vyššia hodnota znamená lepší výsledok. Podľa Wilksovej vety (https://en.wikipedia.org/wiki/Wilks%27_theorem) má táto testovacia štatistika, za platnosti nulovej hypotézy a pri dostatočne veľkej vzorke, asymptoticky chí-kvadrát rozdelenie s počtom stupňov voľnosti rovným rozdielu v počte parametrov medzi modelmi.
+
+Hodnota LRT dosiahla 1844.78 pri 17 stupňoch voľnosti, pričom p-hodnota bola menšia ako 0.001. Na základe tohto výsledku zamietame nulovú hypotézu. Zahrnutie premennej trasa do modelu výrazne zlepšuje vysvetlenie variability v denných počtoch cyklistov. Existujú teda štatisticky významné rozdiely v priemernej dennej vyťaženosti medzi cyklotrasami, čo potvrdzuje alternatívnu hypotézu H₁.
+
+Tieto rozdiely sú zreteľné aj graficky, najvyťaženejšia trasa Dolnozemská dosahuje mnohonásobne vyššie priemerné denné počty cyklistov než najmenej vyťažená trasa Devínska cesta.
+
+![Daily average cyclist count by route](Images/daily_avg_count.png)
+
 ### Analýza vplyvu víkendov a počasia na cyklistickú dopravu
 
 Cieľom tejto časti analýzy bolo kvantifikovať vplyv vybraných časových a meteorologických faktorov na denný počet cyklistov v Bratislave a podporiť odpovede na výskumné otázky týkajúce sa rozdielov medzi pracovnými dňami a víkendmi a vplyvu zrážok na intenzitu cyklistickej dopravy.
@@ -367,70 +427,9 @@ Výsledky vizualizačnej aj štatistickej analýzy jednoznačne potvrdzujú exis
 
 **1. Líši sa denná vyťaženosť jednotlivých cyklotrás v Bratislave?**
 
-Relevantný kód je v súboroch `denne_cyklo.ipynb` a `hypothesis1.ipynb`. Pred vykonaním testu sme dáta pre každú cyklotrasu najprv upravili na spoločný dátum, odstránili neúplné záznamy, zlúčili niektoré trasy, atď., detaily sú v súbore `denne_cyklo.ipynb`.
+Analýza denných počtov cyklistov na jednotlivých cyklotrasách preukázala výrazné rozdiely v ich priemernej vyťaženosti. Vzhľadom na povahu dát (diskrétne počtové údaje s vysokou variabilitou) bola použitá negatívna binomická regresia, ktorá vhodne zohľadňuje nadmernú disperziu prítomnú v údajoch. Diagnostika Poissonovho modelu odhalila extrémnu overdisperziu, čo potvrdilo nevyhnutnosť použitia robustnejšieho modelu pre spoľahlivú štatistickú inferenciu.
 
-Hypotézy:
-
-H₀: Medzi jednotlivými cyklotrasami neexistujú významné rozdiely v priemernej dennej vyťaženosti. (Očakávaný počet cyklistov za deň je rovnaký pre všetky cyklotrasy, parameter trasa nemá významný vplyv na strednú hodnotu.)
-
-H₁: Medzi jednotlivými cyklotrasami existujú významné rozdiely v priemernej dennej vyťaženosti. (Očakávaný počet cyklistov za deň sa líši medzi aspoň dvoma cyklotrasami.)
-
-### Voľba štatistického modelu pre analýzu dennej vyťaženosti cyklotrás
-
-Výber vhodného štatistického modelu je dôležitý pre validitu záverov výskumu. V našej analýze pracujeme s dennými počtami cyklistov (daily_total) na jednotlivých trasách, čo je diskrétna nezáporná celočíselná premenná reprezentujúca počet udalostí (prejazdov bicyklov) za časovú jednotku (deň). Tento typ dát vylučuje použitie klasických metód predpokladajúcich spojitú a normálne rozdelenú závislú premennú.
-
-Metódy ako ANOVA (analýza rozptylu) alebo lineárna regresia predpokladajú: normálne rozdelenie rezíduí, konštantný rozptyl a spojitosť závislej premennej.
-
-Tieto predpoklady sú pri počtových dátach systematicky porušované:
-
-- distribučná asymetria: počty sú často pravostranne šikmé s veľkým podielom nízych hodnôt,
-
-- závislosť rozptylu na priemere: v počtových procesoch zvyčajne platí, že vyšší priemer znamená vyšší rozptyl,
-
-- rozptyl môže výrazne prevyšovať priemer (tzv. overdispersion https://en.wikipedia.org/wiki/Overdispersion),
-
-- diskrétnosť: hodnoty sú celé čísla, nie spojité veličiny.
-
-Použitie nevhodných metód môže viesť k závažným chybám: skresleným odhadom, nesprávnym štandardným chybám a falošne významným p-hodnotám (zvýšená chyba I. typu).
-
-Pre takéto typy dát je vhodné použiť generalizované lineárne modely (GLM, https://en.wikipedia.org/wiki/Generalized_linear_model) s distribúciou priamo určenou pre počty. Základný model pre analýzu počtov je Poissonova regresia, ktorá predpokladá, že závislá premenná pochádza z Poissonovho rozdelenia. Takéto modelovanie zabezpečuje, že predikované hodnoty sú vždy nezáporné. Model priamo odhaduje očakávanú dennú frekvenciu cyklistov pre každú trasu, čo zodpovedá nášmu výskumnému cieľu porovnať priemernú dennú vyťaženosť trás.
-
-V praxi však niekedy pozorujeme, že variabilita pozorovaných denných počtov cyklistov prevyšuje priemer (tzv. overdispersion). V takýchto prípadoch Poissonov model podceňuje chyby odhadov a môže viesť k nesprávnym záverom (napr. falošne významné rozdiely). Preto sa ako alternatíva používa negatívna binomická regresia, ktorá obsahuje ďalší parameter rozptylu a umožňuje modelovať situácie, kde variancia presahuje priemer, čím poskytuje spoľahlivejšie odhady a testovanie hypotéz. (https://link.springer.com/article/10.1186/s12966-023-01460-y, https://stats.oarc.ucla.edu/stata/dae/negative-binomial-regression/)
-
-Test sa vykoná pomocou likelihood ratio test, ktorý porovnáva model s trasami voči nulovému modelu. V analýze sme postupovali nasledovne:
-
-Najprv sme spravili Poissonov model, ktorý slúžil ako diagnostický nástroj na detekciu overdispersion.
-Disperziu sme vypočítali ako pomer Pearson chi squared a residual degrees of freedom (https://www.askpython.com/python-modules/statsmodel/statsmodels-generalized-linear-models).
-Pomer vyšiel výrazne väčší ako 1, preto sme spravili aj negatívny binomický model, lebo v prípade overdispersion Poissonov model podceňuje štandardné chyby, čo vedie k príliš úzkym intervalom spoľahlivosti a zvýšenému riziku falošnej významnosti. (https://www.reddit.com/r/statistics/comments/ttgrxl/q_why_does_overdispersion_make_coefficient/)
-
-Použitím negatívnej binomickej regresie rozšírime Poissonov model o dodatočný parameter rozptylu, čo umožňuje rozptylu rásť nezávisle od priemeru.
-
-Kľúčovým predpokladom Poissonovej regresie je, že rozptyl odpovedajúcej premennej sa rovná jej priemeru. Na posúdenie tohto predpokladu sme vypočítali pomer rozptylu k priemeru pre denný počet cyklistov na každej trase. Pre všetky trasy rozptyl denných počtov výrazne prekročil priemer (pomer rozptylu k priemeru > 50), čo naznačuje podstatnú nadmernú disperziu v porovnaní s Poissonovým predpokladom. Taký veľký pomer disperzie naznačuje, že Poissonov model by podhodnocoval skutočnú variabilitu a viedol by k skresleným štandardným chybám a nespoľahlivým p-hodnotám. Preto sme sa rozhodli použiť aj negatívnu binomickú regresiu, ktorá je zovšeobecnením Poissonovej regresie, ktorá pridáva parameter disperzie, aby vhodnejšie modelovala vyššiu variabilitu v údajoch a poskytovala lepšie štatistické závery.
-
-Na posúdenie rozdielov v očakávanom dennom počte cyklistov na jednotlivých trasách sme najprv použili Poissonov model. Diagnostika tohto modelu odhalila extrémnu overdisperziu (280.99), čo znamená, že variabilita v dátach výrazne prevyšovala variabilitu predpokladanú Poissonovým rozdelením, kde stredná hodnota = rozptyl. V takomto prípade Poissonov model podceňuje štandardné chyby odhadov, čo vedie k nespoľahlivým štatistickým testom a zvýšenému riziku falošnej významnosti (chyba I. typu).
-
-Preto sme ako vhodnejší prístup použili negatívnu binomickú regresiu. Tento model zavádza dodatočný parameter rozptylu, ktorý explicitne modeluje nadmernú variabilitu (overdisperziu). Po jeho aplikácii sa disperzia znížila na 0.57, čo potvrdilo, že negatívny binomický model adekvátne zachytáva variabilitu v našich dátach a je pre ďalšiu inferenciu štatisticky správnou voľbou.
-
-
-Koeficienty oboch modelov sa interpretujú rovnako: predstavujú rozdiel v logaritme očakávaného denného počtu (log(počet)) medzi danou trasou a referenčnou trasou. Ich exponenciála (exp(koeficient)) má multiplikatívny efekt, teda koľkokrát je očakávaný počet na trase vyšší alebo nižší v porovnaní s referenčnou trasou. V našej analýze mal približný denný počet na referenčnej trase hodnotu 635 cyklistov.
-
-Príklad interpretácie: Ak model pre konkrétnu trasu odhadne koeficient 0.97, znamená to, že log(očakávaný_počet) je 0.97 krát vyšší ako na referenčnej trase. Prevod exp(0.97) = 2.64 znamená, že očakávaný denný počet na tejto trase je približne 2.64-násobkom počtu na referenčnej trase, čo predstavuje približne 635 * 2.64 = 1676 cyklistov za deň. Záporný koeficient naopak značí nižšiu vyťaženosť v porovnaní s referenčnou trasou.
-
-Pri porovnaní modelov sme pozorovali, že bodové odhady koeficientov (tj. samotné hodnoty efektov trás) boli v Poissonovom aj negatívnom binomickom modeli veľmi podobné. To je očakávané, pretože oba modely cielené odhadujú rovnakú strednú hodnotu (priemerný denný počet).
-
-Kľúčový a rozhodujúci rozdiel medzi modelmi sa týka istoty týchto odhadov, ktorú vyjadrujú štandardné chyby. Poissonov model, ktorý nútene predpokladá nízku variabilitu, produkuje umelo nízke štandardné chyby. To vedie k extrémne vysokým absolútnym hodnotám testových štatistík (z-hodnôt) a následne k neprimerane nízkym p-hodnotám, ktoré by mohli nesprávne naznačovať štatistickú významnosť. Negatívny binomický model, ktorý korektne zohľadňuje overdisperziu prítomnú v dátach, poskytuje realisticky vyššie a spoľahlivejšie štandardné chyby. V dôsledku toho sú z-hodnoty, p-hodnoty a intervaly spoľahlivosti z tohto modelu spoľahlivejšie a tvoria základ pre naše závery o rozdieloch medzi trasami.
-
-### Porovnanie s nulovým modelom
-
-Na formálne overenie štatistickej významnosti rozdielov medzi trasami sme vykonali LRT (Likelihood Ratio Test). Táto metóda porovnáva negatívny binomický model, ktorý obsahuje trasu ako kategorickú premennú (daily_total ~ nazov), s jednoduchým nulovým modelom (daily_total ~ 1), ktorý predpokladá, že všetky trasy majú rovnakú priemernú dennú vyťaženosť. Logika testu spočíva v posúdení, či komplexnejší model prináša zlepšenie v schopnosti vysvetliť variabilitu v dátach.
-
-LRT sme vypočítali ako dvojnásobok rozdielu medzi logaritmami vierohodnosti (log-likelihood) oboch modelov: LR = 2 * (llf_nb_model - llf_null_nb_model). Logaritmus vierohodnosti (llf) je mierou toho, ako dobre konkrétny model vysvetľuje pozorované dáta; vyššia hodnota znamená lepší výsledok. Podľa Wilksovej vety (https://en.wikipedia.org/wiki/Wilks%27_theorem) má táto testovacia štatistika, za platnosti nulovej hypotézy a pri dostatočne veľkej vzorke, asymptoticky chí-kvadrát rozdelenie s počtom stupňov voľnosti rovným rozdielu v počte parametrov medzi modelmi.
-
-Výsledok testu bol jednoznačný, hodnota LRT štatistiky dosiahla 1844.78 pri 17 stupňoch voľnosti (čo zodpovedá 17 nezávislým porovnaniam medzi 18 trasami). Zodpovedajúca p-hodnota bola menšia ako 0.001, v praxi v podstate nulová. Tento výsledok prevyšuje kritickú hodnotu pre štandardnú hladinu významnosti 0.05 a poskytuje dôvod na zamietnutie nulovej hypotézy. Zahrnutie premennej trasa do modelu poskytuje štatisticky významne lepšie vysvetlenie variabilít v denných počtoch cyklistov. Existujú štatisticky významné rozdiely v priemernej dennej vyťaženosti medzi analyzovanými cyklotrasami, čo potvrdzuje našu alternatívnu hypotézu H1.
-
-Výsledky štatistického testu sú pozorovateľné aj graficky, na grafe vidíme veľké rozdiely v priemernom dennom počte cyklistov. Najfrekventovanejšia trasa Dolnozemská má mnohonásobne vyšší priemerný denný počet cyklistov ako najmenej frekventovaná Devínska cesta.
-
-![Daily average cyclist count by route](Images/daily_avg_count.png)
+Formálne porovnanie plného modelu s nulovým modelom pomocou Likelihood Ratio Testu jednoznačne preukázalo štatisticky významný vplyv premennej trasa na denný počet cyklistov. Výsledky tak umožňujú zamietnuť nulovú hypotézu o rovnakom priemernom dennom zaťažení všetkých cyklotrás. Najvyťaženejšie trasy dosahujú niekoľkonásobne vyššie denné počty cyklistov než najmenej frekventované úseky, čo poukazuje na výraznú priestorovú heterogenitu cyklistickej dopravy v Bratislave.
 
 **2. Existujú rozdiely v správaní cyklistov medzi pracovnými dňami a víkendmi?**
 

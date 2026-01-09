@@ -422,6 +422,105 @@ Výsledky vizualizačnej aj štatistickej analýzy jednoznačne potvrdzujú exis
 
 --- 
 
+## Existuje vzťah medzi priemernou dennou teplotou a počtom cyklistov?
+
+Kód pre túto analýzu sa nachádza v notebooku `hypothesis5.ipynb`. Dáta boli načítané zo súboru `final_data.csv`.
+
+### Hypotézy
+
+**H₀:** Medzi priemernou dennou teplotou a počtom cyklistov neexistuje vzťah.  
+
+**H₁:** Medzi priemernou dennou teplotou a počtom cyklistov existuje vzťah. 
+
+
+### Príprava dát
+
+Hodinové záznamy počtu cyklistov (`pocet_total`) boli agregované na dennú úroveň ako súčet všetkých hodín v rámci daného dňa a cyklotrasy. Priemerná denná teplota (`tavg`) je v dátach pre každý deň konštantná, preto bola k denným súčtom priradená priamo bez ďalšej agregácie. Výsledná dátová tabuľka obsahovala denný počet cyklistov a príslušnú priemernú dennú teplotu.
+
+### Voľba štatistického modelu
+
+Závislou premennou v analýze je denný počet cyklistov, ktorý predstavuje diskrétnu nezápornú celočíselnú premennú. Takýto typ dát nie je vhodné analyzovať pomocou klasickej lineárnej regresie, ktorá predpokladá normálne rozdelené rezíduá a konštantný rozptyl.
+Ako základný model bola najprv použitá Poissonova regresia, ktorá predpokladá rovnosť strednej hodnoty a rozptylu. Tento model bol použitý primárne ako diagnostický nástroj na posúdenie vhodnosti Poissonovho predpokladu.
+
+### Poissonova regresia a diagnostika overdisperzie
+
+Poissonov model bol špecifikovaný ako: daily_total ~ tavg
+Výsledky Poissonovho modelu ukázali silný pozitívny vzťah medzi teplotou a počtom cyklistov. Koeficient priemernej dennej teploty bol kladný a štatisticky významný. Jeho exponenciála (exp(0.072)) naznačovala, že zvýšenie teploty o 1 °C zvyšuje očakávaný denný počet cyklistov približne o 7.5 %.
+Následne bola vykonaná diagnostika overdisperzie pomocou pomeru Pearsonovho chí-kvadrátu a reziduálnych stupňov voľnosti. Hodnota tohto pomeru bola extrémne vysoká (≈ 427), čo jasne indikovalo silnú nadmernú disperziu v dátach. Tento výsledok znamená, že Poissonov model výrazne podhodnocuje skutočnú variabilitu pozorovaných dát a produkuje nerealisticky nízke štandardné chyby.
+
+Z tohto dôvodu Poissonov model nebol považovaný za vhodný.
+
+### Negatívna binomická regresia
+
+Ako vhodnejšia alternatíva bola použitá negatívna binomická regresia, ktorá rozširuje Poissonov model o dodatočný parameter rozptylu a umožňuje, aby variancia presahovala strednú hodnotu. Model bol špecifikovaný ako: pocet_total ~ tavg.
+Výsledky negatívnej binomickej regresie potvrdili štatisticky významný pozitívny vzťah medzi priemernou dennou teplotou a počtom cyklistov. Odhadnutý koeficient priemernej dennej teploty bol 0.0905, čo po exponenciácii znamená, že zvýšenie teploty o 1 °C zvyšuje očakávaný denný počet cyklistov približne o 9.5 %.
+Diagnostika modelu ukázala, že pomer Pearsonovho chí-kvadrátu k reziduálnym stupňom voľnosti klesol na hodnotu približne 0.25, čo indikuje, že negatívny binomický model adekvátne zachytáva variabilitu dát a nie je zaťažený problémom overdisperzie.
+Hoci parameter disperzie α nebol explicitne optimalizovaný a bola použitá jeho implicitná hodnota, model poskytuje konzistentné a interpretovateľné výsledky vhodné pre inferenciu.
+
+### Vizualizácia výsledkov
+
+Vzťah medzi priemernou dennou teplotou a počtom cyklistov bol vizualizovaný pomocou bodového grafu skutočných denných pozorovaní, doplneného o predikčnú krivku negatívnej binomickej regresie. Vizualizácia jasne ukazuje rastúci trend počtu cyklistov s rastúcou teplotou, pričom regresná krivka hladko aproximuje stredný trend v dátach.
+
+![Relationship between Average Daily Temperature and Number of Cyclists](Images/negbinomregresia5.png)
+
+### Záver
+
+Na základe výsledkov negatívnej binomickej regresie zamietame nulovú hypotézu H₀. 
+Existuje štatisticky významný a pozitívny vzťah medzi priemernou dennou teplotou a počtom cyklistov. Vyššie teploty sú spojené s vyšším očakávaným denným počtom cyklistov, pričom efekt je významný aj po korekcii na nadmernú disperziu v dátach.
+
+## Analýza 24h časových vzorov využitia cyklotrás v Bratislave
+
+Cieľom tejto časti analýzy bolo overiť, či je možné na základe denného časového profilu rozlíšiť rôzne typy cyklotrás v Bratislave.
+
+### Výskumná otázka a hypotézy
+
+6. Je možné na základe časových vzorov využiť dáta na rozlíšenie rôznych typov cyklotrás?
+
+**H₀:** Všetky cyklotrasy majú podobný časový profil využitia.  
+**H₁:** Cyklotrasy je možné rozdeliť do skupín s odlišným časovým profilom využitia.
+
+### Príprava 24h profilov
+
+Dáta boli agregované na hodinovú úroveň pre každú trasu (`pocet_total` podľa hodiny) a následne pivotované do formátu 24h profilu (`hour` 0–23). Pre každú trasu bol vypočítaný podiel počtu cyklistov v danej hodine z celkového denného počtu, aby sme získali **normalizovaný časový profil** (`profile_normalized`). Tento krok zabezpečuje porovnateľnosť trás nezávisle od absolútneho počtu prejazdov.
+
+### Vizualizácia časových profilov
+ 
+- **Všetky trasy na jednom grafe:** Vizualizácia odhalila dva základné typy trás:
+  1. Ranný a popoludňajší peak – typické „do práce / z práce“.  
+  2. Len popoludňajší peak – typické rekreačné / popoludňajšie trasy.
+
+![Cycling Route Profiles](Images/vsetkytrasy1graf6.png)
+
+- **Clustre podľa KMeans:** Použitím KMeans klasterovania a silhouette skóre sme vybrali optimálny počet clusterov = 2. Vizualizácia priemerného profilu pre každý cluster potvrdila odlíšenie oboch typov trás.
+  
+![Cycling Route Profiles by Clusters](Images/2clustre_vsetky_trasy.png)
+
+### 24h profily podľa clusterov
+**Cluster 1 (ranný + popoludňajší peak)** – „do práce / z práce“:
+Starý Most, Dunajská, Most Apollo, Vajanského 1, Vajanského 2, Incheba Einsteinova, Trenčianska, Dunajská/Lazaretská, Starý most 2, River Park, Vajnorská, Vajnorská > NTC, Páričkova, Viedenska
+
+
+**Cluster 2 (len popoludňajší peak)** – „hlavne rekreačné / popoludňajšie trasy“:
+Železná studnička, Dolnozemská, Devínska cesta, Most SNP, Cyklomost Slobody, Devinska Nova Ves, Hradza Berg
+
+Poznámka: Most SNP je cyklotrasa používaná celý deň vo vysokej frekvencii a po overení na dátach sme videli že ajkeď je používaná aj na dojazdy do a z práce, je frekventovaná celý deň, preto bola zaradená do Clustru 2.
+
+### Kvantitatívna analýza
+
+Použitím KMeans klasterovania a silhouette skóre sme objektívne odhalili dva samostatné clustre trás. Silhouette score ukázalo, že rozdelenie na 2 clustre je optimálne a poskytuje zmysluplné rozlíšenie podľa denného časového profilu.
+- **Cluster 0:** trasy s ranným a popoludňajším peakom  
+- **Cluster 1:** trasy s jedným popoludňajším peakom  
+Týmto spôsobom sú trasy kvantitatívne rozlíšené podľa tvaru 24h profilu.
+
+### Interpretácia a záver
+
+Vizualizácie aj klasterová analýza jasne ukazujú, že existujú **dva odlišné typy časového správania cyklotrás** v Bratislave: pracovné trasy s dvojitým peakom a rekreačné trasy s popoludňajším peakom.  
+
+Na základe týchto výsledkov môžeme **zamietnuť nulovú hypotézu H₀** a prijať alternatívnu hypotézu H₁:
+- **H₀:** Všetky cyklotrasy majú podobný časový profil -> zamietnuté  
+- **H₁:** Trasy sa dajú rozdeliť do skupín podľa časového profilu -> potvrdené
+Tieto závery sú založené na **normalizovaných 24h profiloch**, vizualizáciách jednotlivých trás a kvantitatívnej klasterovej analýze pomocou KMeans.
+
 
 ### Zmenilo pridanie cyklocesty na Vajanského nábreží trendy v správaní cyklistov?
 

@@ -576,7 +576,15 @@ Vyššie množstvo zrážok je spojené s poklesom cyklistickej dopravy, čo naz
 
 **5. Existuje vzťah medzi priemernou dennou teplotou a počtom cyklistov?**
 
+Regresná analýza, zahŕňajúca Poissonov aj negatívny binomický model, odhalila jednoznačne pozitívny efekt priemernej dennej teploty na počet cyklistov. Každý nárast teploty o 1 °C zodpovedá približne 9,5 % zvýšeniu očakávaného denného počtu prejazdov, čo naznačuje, že teplota je významným faktorom ovplyvňujúcim rozhodovanie o využití bicykla.
+
+Negatívna binomická regresia umožnila korektne zachytiť nadmernú disperziu dát a poskytla realistickejšie odhady štandardných chýb. Výsledky teda podporujú záver, že teplejšie dni významne zvyšujú intenzitu cyklistickej dopravy.
+
 **6. Je možné na základe časových vzorov využiť dáta na rozlíšenie rôznych typov cyklotrás?**
+
+Analýza 24‑hodinových normalizovaných profilov cyklotrás pomocou klastrovania odhalila dve jasne odlíšiteľné skupiny: trasy s ranným a poobedným peakom („do práce a z práce“) a trasy s dominantným poobedným peakom („rekreačné/popoldňajšie trasy“). Tieto vzorce boli vizuálne potvrdené priemernými profilmi pre každý cluster a 2D PCA projekciou, ktorá ukázala separáciu trás podľa časových charakteristík.
+
+Na základe týchto zistení môžeme zamietnuť nulovú hypotézu H₀ a konštatovať, že časové profily cyklotrás umožňujú rozlíšiť trasy podľa typu ich využitia, čo podporuje predpoklad existencie odlišných skupín trás podľa denného rytmu dopravy.
 
 **7. Zmenilo pridanie cyklocesty na Vajanského nábreží trendy v správaní cyklistov?**
 
